@@ -37,6 +37,14 @@ namespace Tubifarry.Indexers.Soulseek
 
             if (!Settings.UseFallbackSearch)
                 return chain;
+            
+            // Artist with wildcard substitution
+            chain.AddTier(DeferredGetRequests(
+                $"*{searchCriteria.ArtistQuery[1..]}", 
+                searchCriteria.AlbumQuery, 
+                searchCriteria.InteractiveSearch, 
+                tarckCount
+            ));
 
             List<string> aliases = searchCriteria.Artist.Metadata.Value.Aliases;
             for (int i = 0; i < 2 && i < aliases.Count; i++)
@@ -61,6 +69,13 @@ namespace Tubifarry.Indexers.Soulseek
             int tarckCount = searchCriteria.Albums.FirstOrDefault()?.AlbumReleases.Value.Min(x => x.TrackCount) ?? 0;
             IndexerPageableRequestChain chain = new();
             chain.AddTier(DeferredGetRequests(searchCriteria.CleanArtistQuery, null, searchCriteria.InteractiveSearch, tarckCount));
+            // Artist with wildcard substitution
+            chain.AddTier(DeferredGetRequests(
+                $"*{searchCriteria.CleanArtistQuery[1..]}", 
+                null, 
+                searchCriteria.InteractiveSearch, 
+                tarckCount
+            ));
 
             List<string> aliases = searchCriteria.Artist.Metadata.Value.Aliases;
             for (int i = 0; i < 3 && i < aliases.Count && Settings.UseFallbackSearch; i++)
