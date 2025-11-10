@@ -139,10 +139,10 @@ jobs:
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: |
           # Restore NuGet packages first
-          dotnet restore /p:NoWarn="NU1902,CS1591" *.sln
+          dotnet restore /p:NoWarn=true *.sln
           
           # Then build with all parameters
-          dotnet build /p:NoWarn="NU1902,CS1591" *.sln -c Release -f ${{ inputs.framework }} \
+          dotnet build /p:NoWarn=true *.sln -c Release -f ${{ inputs.framework }} \
             -p:Version=${{ inputs.package_version }} \
             -p:AssemblyVersion=${{ inputs.package_version }} \
             -p:FileVersion=${{ inputs.package_version }} \
