@@ -62,16 +62,19 @@ namespace Tubifarry.Metadata.ScheduledTasks.SearchSniper
         [FieldDefinition(5, Label = "Pause When Queued", Type = FieldType.Number, Placeholder = "0", HelpText = "Pause searching when the queue reaches this number. Set to 0 to disable.")]
         public int StopWhenQueued { get; set; }
 
-        [FieldDefinition(6, Label = "Cache Type", Type = FieldType.Select, SelectOptions = typeof(CacheType), HelpText = "The type of cache to use for storing search results. Memory cache is faster but does not persist after restart. Permanent cache persists on disk but requires a valid directory.")]
+        [FieldDefinition(6, Label = "Pause When Status", Type = FieldType.Select, SelectOptions = typeof(WaitOnType), HelpText = "Select which queue statuses should be counted when checking the 'Pause When Queued' threshold. This determines which types of items in the queue will prevent new searches from being triggered.")]
+        public int WaitOn { get; set; } = (int)WaitOnType.QueuedAndDownloading;
+
+        [FieldDefinition(7, Label = "Cache Type", Type = FieldType.Select, SelectOptions = typeof(CacheType), HelpText = "The type of cache to use for storing search results. Memory cache is faster but does not persist after restart. Permanent cache persists on disk but requires a valid directory.")]
         public int RequestCacheType { get; set; } = (int)CacheType.Memory;
 
-        [FieldDefinition(7, Label = "Missing", Type = FieldType.Checkbox, HelpText = "Search for albums that are missing from your library.")]
+        [FieldDefinition(8, Label = "Missing", Type = FieldType.Checkbox, HelpText = "Search for albums that are missing from your library.")]
         public bool SearchMissing { get; set; } = true;
 
-        [FieldDefinition(8, Label = "Missing Tracks", Type = FieldType.Checkbox, HelpText = "Automatically search for albums that have missing tracks in your library.")]
+        [FieldDefinition(9, Label = "Missing Tracks", Type = FieldType.Checkbox, HelpText = "Automatically search for albums that have missing tracks in your library.")]
         public bool SearchMissingTracks { get; set; }
 
-        [FieldDefinition(9, Label = "Cutoff Not Met", Type = FieldType.Checkbox, HelpText = "Automatically search for albums where the current quality does not meet the quality cutoff.")]
+        [FieldDefinition(10, Label = "Cutoff Not Met", Type = FieldType.Checkbox, HelpText = "Automatically search for albums where the current quality does not meet the quality cutoff.")]
         public bool SearchQualityCutoffNotMet { get; set; }
 
         public string BaseUrl { get; set; } = string.Empty;
@@ -80,6 +83,24 @@ namespace Tubifarry.Metadata.ScheduledTasks.SearchSniper
         public static SearchSniperTaskSettings? Instance { get; private set; }
 
         public NzbDroneValidationResult Validate() => new(Validator.Validate(this));
+    }
+
+    public enum WaitOnType
+    {
+        [FieldOption(Label = "Queued Only", Hint = "Count only items waiting to start downloading")]
+        Queued = 0,
+
+        [FieldOption(Label = "Downloading Only", Hint = "Count only items actively downloading")]
+        Downloading = 1,
+
+        [FieldOption(Label = "Warning Only", Hint = "Count only items with warnings")]
+        Warning = 2,
+
+        [FieldOption(Label = "Queued + Downloading", Hint = "Count items that are queued or actively downloading")]
+        QueuedAndDownloading = 3,
+
+        [FieldOption(Label = "All Active Items", Hint = "Count all non-completed items")]
+        All = 4
     }
 
     public class SearchSniperCommand : Command

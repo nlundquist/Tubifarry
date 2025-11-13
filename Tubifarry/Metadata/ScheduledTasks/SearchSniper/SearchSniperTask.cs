@@ -59,7 +59,7 @@ namespace Tubifarry.Metadata.ScheduledTasks.SearchSniper
 
         private SearchSniperTaskSettings ActiveSettings => Settings ?? SearchSniperTaskSettings.Instance!;
 
-        public override int IntervalMinutes => SearchSniperTaskSettings.Instance.RefreshInterval;
+        public override int IntervalMinutes => SearchSniperTaskSettings.Instance!.RefreshInterval;
 
         public override CommandPriority Priority => CommandPriority.Low;
 
@@ -120,11 +120,11 @@ namespace Tubifarry.Metadata.ScheduledTasks.SearchSniper
 
             if (ActiveSettings.StopWhenQueued > 0)
             {
-                int queueCount = _queueService.GetQueue().Count(x => x.Status == "Queued" || x.Status == "Downloading");
+                int queueCount = GetQueueCountByWaitOnType((WaitOnType)ActiveSettings.WaitOn);
                 if (queueCount >= ActiveSettings.StopWhenQueued)
                 {
-                    message.SetCompletionMessage("Skipping Search Sniper, too many downloads queued");
-                    _logger.Info($"Skipping. Queue size ({queueCount}) reached threshold ({ActiveSettings.StopWhenQueued})");
+                    message.SetCompletionMessage($"Skipping Search Sniper, queue threshold reached ({queueCount} {(WaitOnType)ActiveSettings.WaitOn} items)");
+                    _logger.Info($"Skipping. Queue count ({queueCount}) of {(WaitOnType)ActiveSettings.WaitOn} items reached threshold ({ActiveSettings.StopWhenQueued})");
                     return;
                 }
             }
@@ -311,6 +311,24 @@ namespace Tubifarry.Metadata.ScheduledTasks.SearchSniper
                 _logger.Error(ex, "Error querying albums where cutoff is not met");
                 return [];
             }
+        }
+
+        /// <summary>
+        /// Gets the count of queue items based on the selected WaitOnType.
+        /// </summary>
+        private int GetQueueCountByWaitOnType(WaitOnType waitOnType)
+        {
+            List<Queue> queue = _queueService.GetQueue();
+
+            return waitOnType switch
+            {
+                WaitOnType.Queued => queue.Count(x => x.Status == "Queued"),
+                WaitOnType.Downloading => queue.Count(x => x.Status == "Downloading"),
+                WaitOnType.Warning => queue.Count(x => x.Status == "Warning"),
+                WaitOnType.QueuedAndDownloading => queue.Count(x => x.Status == "Queued" || x.Status == "Downloading"),
+                WaitOnType.All => queue.Count(x => x.Status != "Completed" && x.Status != "Failed"),
+                _ => 0
+            };
         }
 
         /// <summary>

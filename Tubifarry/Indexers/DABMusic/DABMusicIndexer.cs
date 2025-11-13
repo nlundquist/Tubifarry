@@ -15,7 +15,7 @@ namespace Tubifarry.Indexers.DABMusic
         private readonly IDABMusicSessionManager _sessionManager;
 
         public override string Name => "DABMusic";
-        public override string Protocol => "QobuzDownloadProtocol";
+        public override string Protocol => nameof(QobuzDownloadProtocol);
         public override bool SupportsRss => false;
         public override bool SupportsSearch => true;
         public override int PageSize => 50;
